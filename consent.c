@@ -1,8 +1,19 @@
-//on utilise watch dog timer pour moins de consommation 
+//on utilise watch dog timer et power-down mode  pour moins de consommation 
 #include<avr/wdt.h>
 #include<avr/intterupt.h>
 #include <avr/sleep.h>
 
+void setup_watchdog_for_16ms(){
+   cli(); // disable global interrupts 
+   WDTCSR|=0x18; // enable wdt change
+   WDTCSR=0x40; // 16ms
+
+  // power-down mode
+  SMCR=4;
+   sei(); //reactiver les interruptions 
+ }
+
+ISR(WDT_vect){}
 
 
 uint8_t() wait_for_consent(){
