@@ -13,3 +13,6 @@ void delay_ms(uint16_t ms);
 void init_io();
 int button_is_pressed();
 void toggle_led();
+void debounce() ; 
+void wait_for_consent(); 
+void setup_watchdog_for_16m();
