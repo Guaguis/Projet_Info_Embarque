@@ -1,6 +1,7 @@
 #include <memoire.h>
 #include <avr/eeprom.h>
 #include <string.h>
+#include <salt.h>
 
 /*
   on manipulera directement les adresses numeriques
@@ -56,7 +57,7 @@
 #define eep_items ((eep_item_t *)(22+EEP_MAXSIZE*sizeof(id_t)))
 
 // on stocke en SRAM la bitmap, le compteur et les app_id
-static uint8_t sram_compteur[16];
+#define sram_compteur (salt)
 static uint8_t sram_bitmap[4];
 static id_t sram_ids[EEP_MAXSIZE];
 
