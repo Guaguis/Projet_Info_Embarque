@@ -1,5 +1,6 @@
 #ifndef SIGNATURE_H
 #define SIGNATURE_H
+#include <stdint.h>
 
 // a appeler au debut du programme
 void signature_init(void);
