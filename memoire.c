@@ -62,7 +62,7 @@ int memoire_push(uint8_t sk[21], id_t id, uint8_t cred_id[16]){
       if(!((sram_bitmap[i>>3]>>(i&7))&1)){ // position libre
 	pos=i;
 	sram_bitmap[i>>3]|=1U<<(i&7); // mise a jour bitmap
-
+	
 	// on ecrit l'id et la bitmap, et on ecrira l'item apres
 	memcpy(sram_ids, id, sizeof(id_t));
 	eeprom_update_block(sram_bitmap, eep_bitmap, 4);
@@ -72,7 +72,7 @@ int memoire_push(uint8_t sk[21], id_t id, uint8_t cred_id[16]){
       }
     }
   }
-
+  
   // pas de place
   if(pos==-1){
     memset(sk, 0, 21);
@@ -119,6 +119,9 @@ void memoire_init_iterateur(memoire_iterateur_t * i){
 }
 
 void memoire_iterateur_next(memoire_iterateur_t * i, eep_item_t * dst){
+  if(*i==MEM_PARCOURS_FINI)
+    return;
+  
   eep_item_t * src=eep_items+*i;
   eeprom_read_block(dst, src, sizeof(eep_item_t));
 
