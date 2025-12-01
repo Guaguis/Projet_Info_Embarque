@@ -8,8 +8,9 @@
   0-3 : inputs utilisateur
   4-6 : inputs client
   7 : chaleur
+  reste : rien
 */
-static uint16_t toHash[8];
+static uint16_t toHash[64];
 /*
   nombre d'inputs utilisateur deja enregistrees
   pour le prochain reseed
@@ -68,7 +69,7 @@ static int reseed(void){
 
   collect_temperature();
   for(int i=0; i<8; i++){ // ajout sel
-    toHash[i]^=salt[i<<1]|(salt[(i<<1)|1]);
+    toHash[8|i]^=salt[i<<1]|(salt[(i<<1)|1]);
   }
   compute_blake2s((uint8_t *)toHash, alea);
   
