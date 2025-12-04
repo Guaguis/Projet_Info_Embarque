@@ -26,18 +26,6 @@ static void serial_read(uint8_t *buf, uint8_t len) {
     }
 }
 
-uint8_t serial_read_exact(uint8_t *buf, uint8_t len) {
-    for (uint8_t i = 0; i < len; i++) {
-        if (!uart_available()) {  // 
-            return 0;
-        }
-        buf[i] = usart_read_byte();
-    }
-    return 1;
-}
-
-    
-
 // Envoie exactement len octets sur l'UART
 static void serial_write(const uint8_t *buf, uint8_t len) {
     for (uint8_t i = 0; i < len; i++) {
