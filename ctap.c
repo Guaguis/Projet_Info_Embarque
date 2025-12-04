@@ -45,7 +45,7 @@ static void serial_write_byte(uint8_t b) {
 
 
 
-void ctap_makecredential(void) {
+void makecredential(void) {
     id_t hashed_app_id;          // 20 octets
     uint8_t priv_key20[20];      // clé privée micro-ecc (20 octets)
     uint8_t sk[21];              // ce qu'on stocke en EEPROM
@@ -102,7 +102,7 @@ void ctap_makecredential(void) {
 }
 
 
-void ctap_listcredentials(void) {
+void listcredentials(void) {
     memoire_iterateur_t it;
     eep_item_t item;
     uint8_t count = 0;
@@ -127,7 +127,7 @@ void ctap_listcredentials(void) {
     }
 }
 
-void ctap_reset(void) {
+void reset(void) {
     // Demande de consentement utilisateur
     if (!wiat_for_consent()) {
         serial_write_byte(STATUS_ERR_APPROVAL);
