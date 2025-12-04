@@ -1,9 +1,10 @@
 #include <stdint.h>
 #include <string.h>
 #include "memoire.h"
-#include "uECC.h"   // bibliothèque micro-ecc
+#include "uECC.h"  
 #include "consent.h"
-// Constantes de statut (cf sujet)
+#include "uart.h"
+// Constantes de statut 
 #define STATUS_OK                 0
 #define STATUS_ERR_COMMAND_UNKNOWN 1
 #define STATUS_ERR_CRYPTO_FAILED  2
@@ -14,7 +15,7 @@
 
 // ================= UART =================
 
-// Lis exactement len octets depuis l'UART (bloquant)
+// Lis exactement len octets depuis l'UART 
 static void serial_read(uint8_t *buf, uint8_t len) {
     for (uint8_t i = 0; i < len; i++) {
         buf[i] = usart_read_byte();   
@@ -101,5 +102,42 @@ void ctap_makecredential(void) {
 }
 
 
+void ctap_listcredentials(void) {
+    memoire_iterateur_t it;
+    eep_item_t item;
+    uint8_t count = 0;
+
+    // on compte les credentials
+    memoire_init_iterateur(&it);
+    while (it != MEM_PARCOURS_FINI) {
+        memoire_iterateur_next(&it, &item);
+        count++;
+    }
+
+    // on envoit la réponse
+    serial_write_byte(STATUS_OK);  // statut
+    serial_write_byte(count);      // nombre de credentials
+
+    //  ensuite on fait un deuxième tour et on  envoit  tous les credential_id
+    memoire_init_iterateur(&it);
+    while (it != MEM_PARCOURS_FINI) {
+        memoire_iterateur_next(&it, &item);
+        // On n'envoie que les 16 octets de cred_id
+        serial_write(item.cred_id, 16);
+    }
+}
+
+void ctap_reset(void) {
+    // Demande de consentement utilisateur
+    if (!wiat_for_consent()) {
+        serial_write_byte(STATUS_ERR_APPROVAL);
+        return;
+    }
+    // Effacer tous les credentials de l'Authenticator
+    memoire_reset();
+
+    // Réponse OK
+    serial_write_byte(STATUS_OK);
+}
 
 
