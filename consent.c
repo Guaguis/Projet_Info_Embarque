@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <avr/io.h>
 #include <consent.h>
+#include <alea.h>
 
 static void setup_watchdog_for_16ms(void){
    cli(); // disable global interrupts 
