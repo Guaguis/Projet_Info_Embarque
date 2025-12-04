@@ -34,12 +34,12 @@ uint8_t serial_read_exact(uint8_t *buf, uint8_t len) {
 // Envoie exactement len octets sur l'UART
 static void serial_write(const uint8_t *buf, uint8_t len) {
     for (uint8_t i = 0; i < len; i++) {
-        UART__putc(buf[i]);           // <-- remplace par ta fonction
+        UART__putc(buf[i]);           //
     }
 }
 
 static void serial_write_byte(uint8_t b) {
-    UART__putc(b);                    // idem
+    UART__putc(b);                    // 
 }
 
 
