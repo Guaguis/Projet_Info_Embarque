@@ -11,8 +11,8 @@ static void setup_watchdog_for_16ms(void){
    WDTCSR|=0x18; // enable wdt change
    WDTCSR=0x40; // 16ms
 
-  // power-down mode
-  SMCR=4;
+   // power-down mode
+   SMCR=4;
    sei(); //reactiver les interruptions 
  }
 
@@ -24,6 +24,8 @@ void consent_init(void){
   
   DDRB = _BV(DDB5); // pour la LED
   PORTB = 0;
+
+  TCCR1B=_BV(CS10); // horloge clock1 pour generation alea
 }
 
 volatile uint8_t button_state = 1;     // bouton sur pull-up
@@ -68,6 +70,7 @@ uint16_t tick=0;
     debounce();
     if (button_pushed_flag==1){
         sleep_disable();
+	alea_collect_user(TCNT1);
         return 1;
     
     }
