@@ -7,12 +7,6 @@
   Si bouton appuyé, on arrete le clignotement et on renvoie 1.
   Sinon on renvoie zero.
 */
-uint8_t askConsent();
+uint8_t wait_for_consent(void);
 
-void delay_ms(uint16_t ms);
-void init_io();
-int button_is_pressed();
-void toggle_led();
-void debounce() ; 
-void wait_for_consent(); 
-void setup_watchdog_for_16m();
+void consent_init(void);
