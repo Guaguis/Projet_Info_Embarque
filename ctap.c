@@ -18,29 +18,28 @@
 #define STATUS_ERR_STORAGE_FULL   (5)
 #define STATUS_ERR_APPROVAL       (6)
 
+// ================= UART =================
+uint8_t usart_read_byte(void) {
+    uint8_t data;
+
+    // Bloque jusqu’à ce que le buffer reçoive un octet
+    while (uart_read_from_buffer(&data)) {
+        // attente courte 
+    }
+
+    return data;
+}
+
 // on lit  exactement len octets depuis l'UART 
 static void serial_read(uint8_t *buf, uint8_t len) {
     for (uint8_t i = 0; i < len; i++) {
-      buf[i] = UART__getc();   // 
+        buf[i] = usart_read_byte();   // 
     }
 }
 
 static uint8_t serial_read_exact(uint8_t *buf, uint8_t len) {
     serial_read(buf, len);
     return 1;   // toujours OK
-}
-
-    
-
-// Envoie exactement len octets sur l'UART
-static void serial_write(const uint8_t *buf, uint8_t len) {
-    for (uint8_t i = 0; i < len; i++) {
-        UART__putc(buf[i]);           //
-    }
-}
-
-static void serial_write_byte(uint8_t b) {
-    UART__putc(b);                    // 
 }
 
 
