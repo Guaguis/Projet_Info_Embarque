@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "memoire.h"
-#include "uECC.h"   
+#include "signature.h"   
 #include "consent.h"
 #include "uart.h"
 #include "ctap.h"
@@ -32,6 +32,13 @@ static void serial_read(uint8_t *buf, uint8_t len) {
     }
 }
 
+static uint8_t serial_read_exact(uint8_t *buf, uint8_t len) {
+    serial_read(buf, len);
+    return 1;   // toujours OK
+}
+
+    
+
 // Envoie exactement len octets sur l'UART
 static void serial_write(const uint8_t *buf, uint8_t len) {
     for (uint8_t i = 0; i < len; i++) {
@@ -47,16 +54,14 @@ static void serial_write_byte(uint8_t b) {
 
 void makecredential(void) {
     id_t hashed_app_id;          // 20 octets
-    uint8_t priv_key20[20];      // clé privée micro-ecc (20 octets)
     uint8_t sk[21];              // ce qu'on stocke en EEPROM
     uint8_t pub_key[40];         // clé publique (X||Y)
     uint8_t cred_id[16];         // credential_id généré
-    const struct uECC_Curve_t *curve = uECC_secp160r1();
     int ret;
     alea_collect_client(TCNT1);
 
     // Vérifier que nous avons reçu les 20 octets du hash
-        if (!serial_read(hashed_app_id, 20)) {
+        if (!serial_read_exact(hashed_app_id, 20)) {
             serial_write_byte(STATUS_ERR_BAD_PARAMETER);
          return;
         }
@@ -67,18 +72,13 @@ void makecredential(void) {
         serial_write_byte(STATUS_ERR_APPROVAL);
         return;
     }
-    alea_collect_user(TCNT1);
+   
     //  Générer une nouvelle paire de clés ECDSA (secp160r1)
-    if (!uECC_make_key(pub_key, priv_key20, curve)) {
+    if (!signature_keygen(pub_key, sk)) {
         // Erreur crypto
         serial_write_byte(STATUS_ERR_CRYPTO_FAILED);
         return;
     }
-
-    // Préparer sk[21] pour la mémoire :
-    //    on choisit de mettre un octet de padding devant (0) pour respecter le format du projet . 
-    sk[0] = 0;
-    memcpy(&sk[1], priv_key20, 20);
 
     //  Stocker (hashed_app_id, cred_id, sk) en EEPROM
     ret = memoire_push(sk, hashed_app_id, cred_id);
@@ -87,8 +87,6 @@ void makecredential(void) {
     if (ret != 0) {
         // Pas de place (pos==-1) -> STATUS_ERR_STORAGE_FULL
         serial_write_byte(STATUS_ERR_STORAGE_FULL);
-        // On nettoie la clé privée temporaire
-        memset(priv_key20, 0, sizeof(priv_key20));
         return;
     }
 
@@ -97,8 +95,7 @@ void makecredential(void) {
     serial_write(cred_id, 16);
     serial_write(pub_key, 40);
 
-    //  Effacer la clé privée en RAM
-    memset(priv_key20, 0, sizeof(priv_key20));
+
 }
 
 
@@ -113,7 +110,7 @@ void getassertion(void) {
     const struct uECC_Curve_t *curve = uECC_secp160r1();
 
     //  Lire hashed_app_id et clientDataHash depuis l’UART
-     if (!serial_read(hashed_app_id, 20)) {
+     if (!serial_read_exact(hashed_app_id, 20)) {
         serial_write_byte(STATUS_ERR_BAD_PARAMETER);
         return;
     }
@@ -138,19 +135,13 @@ void getassertion(void) {
         memset(item.sk, 0, sizeof(item.sk));
         return;
     }
-
-    //  Extraire la vraie clé privée 20 octets depuis sk[21]
-    //    On suppose qu'on a stocké 0 || priv_key20 dans sk
-    memcpy(priv_key20, &item.sk[1], 20);
-
-    //  Signer clientDataHash avec ECDSA
-    if (!uECC_sign(priv_key20, client_data_hash, 20, signature, curve)) {
-        serial_write_byte(STATUS_ERR_CRYPTO_FAILED);
-        memset(priv_key20, 0, sizeof(priv_key20));
-        memset(item.sk, 0, sizeof(item.sk));
-        memset(client_data_hash, 0, sizeof(client_data_hash));
-        return;
-    }
+    
+if (!signature_sign(item.sk, client_data_hash, signature)) {
+    serial_write_byte(STATUS_ERR_CRYPTO_FAILED);
+    memset(item.sk, 0, sizeof(item.sk));
+    memset(client_data_hash, 0, sizeof(client_data_hash));
+    return;
+}
 
     // Succès : envoyer STATUS_OK + credential_id + signature
     serial_write_byte(STATUS_OK);
@@ -158,7 +149,6 @@ void getassertion(void) {
     serial_write(signature, 40);
 
     //  Nettoyage des secrets en RAM
-    memset(priv_key20, 0, sizeof(priv_key20));
     memset(item.sk, 0, sizeof(item.sk));
     memset(client_data_hash, 0, sizeof(client_data_hash));
 }
