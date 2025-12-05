@@ -18,10 +18,22 @@
 #define STATUS_ERR_STORAGE_FULL   (5)
 #define STATUS_ERR_APPROVAL       (6)
 
+// ================= UART =================
+/*uint8_t usart_read_byte(void) {
+    uint8_t data;
+
+    // Bloque jusqu’à ce que le buffer reçoive un octet
+    while (uart_read_from_buffer(&data)) {
+        // attente courte 
+    }
+
+    return data;
+    }*/
+
 // on lit  exactement len octets depuis l'UART 
 static void serial_read(uint8_t *buf, uint8_t len) {
     for (uint8_t i = 0; i < len; i++) {
-      buf[i] = UART__getc();   // 
+        buf[i] = usart_read_byte();   // 
     }
 }
 
@@ -29,7 +41,6 @@ static uint8_t serial_read_exact(uint8_t *buf, uint8_t len) {
     serial_read(buf, len);
     return 1;   // toujours OK
 }
-
     
 
 // Envoie exactement len octets sur l'UART
@@ -85,9 +96,7 @@ void makecredential(void) {
 
     //  Succès : envoyer STATUS_OK + le couple  (credential_id + clé publique) : Makecredentialresponse
     serial_write_byte(STATUS_OK);
-    wait_for_consent();
     serial_write(cred_id, 16);
-    wait_for_consent();
     serial_write(pub_key, 40);
     /*uint8_t response[57]={0};
     response[0]=STATUS_OK;
@@ -133,6 +142,7 @@ void getassertion(void) {
         memset(item.sk, 0, 21);
         return;
     }
+
     
 if (!signature_sign(item.sk, client_data_hash, signature)) {
     serial_write_byte(STATUS_ERR_CRYPTO_FAILED);

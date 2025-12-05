@@ -22,7 +22,7 @@ int main(void ){
     signature_init();
     consent_init();
 for (;;) {
-    uint8_t cmd = UART__getc();
+  uint8_t cmd = usart_read_byte();
     switch (cmd) {
         case COMMAND_MAKE_CREDENTIAL: makecredential(); break;
         case COMMAND_GET_ASSERTION:   getassertion();   break;

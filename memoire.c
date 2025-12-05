@@ -160,7 +160,7 @@ int memoire_push(uint8_t sk[21], id_t id, uint8_t cred_id[16]){
 int memoire_get(id_t id, eep_item_t * dst){
   // position de l'id dans le tableau des ids
   int pos=-1;
-  
+
   // recherche de l'id
   for(unsigned i=0; i<EEP_MAXSIZE; i++){
     if( ((sram_bitmap[i>>3]>>(i&7))&1) && !memcmp(id, sram_ids[i], sizeof(id_t)) ){

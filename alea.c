@@ -80,8 +80,10 @@ static int reseed(void){
   return 0;
 }
 //#include <consent.h>
+#include <uart.h>
 int alea_gen(uint8_t * dest, unsigned length){
   if(length>32){
+    UART__putc(length);
     return 0;
   }
   if(length>(unsigned)(32-alea_curseur)){
