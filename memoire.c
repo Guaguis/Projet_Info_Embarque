@@ -180,15 +180,19 @@ void memoire_init_iterateur(memoire_iterateur_t * i){
   for(*i=0; *i<EEP_MAXSIZE && !(sram_bitmap[*i>>3]>>(*i&7))&1; (*i)++){}
 }
 
-void memoire_iterateur_next(memoire_iterateur_t * i, eep_item_t * dst){
+id_t const * memoire_iterateur_next(memoire_iterateur_t * i, eep_item_t * dst){
   if(*i==MEM_PARCOURS_FINI)
-    return;
+    return NULL;
+
+  id_t const * ans=sram_ids+*i;
   
   eep_item_t * src=eep_items+*i;
   eeprom_read_block(dst, src, sizeof(eep_item_t));
 
   // incrementation de l'iterateur
   for(; *i<EEP_MAXSIZE && !(sram_bitmap[*i>>3]>>(*i&7))&1; (*i)++){}
+
+  return ans;
 }
 
 uint8_t memoire_count(void){
