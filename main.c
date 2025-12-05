@@ -5,11 +5,15 @@
 #include "ctap.h"
 #include "memoire.h"
 #include "alea.h"
-#include "uECC.h"
+#include "signature.h"
 
 #define STATUS_ERR_COMMAND_UNKNOWN 1
 
 int main(void ){
+    uart_init();
+    memoire_init();
+    signature_init();
+    
 for (;;) {
     uint8_t cmd = usart_read_byte();
     switch (cmd) {
