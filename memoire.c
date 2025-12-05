@@ -3,6 +3,8 @@
 #include <string.h>
 #include <salt.h>
 
+uint8_t salt[16];
+
 /*
   on manipulera directement les adresses numeriques
   on ne fait pas confiance a gcc
@@ -184,7 +186,7 @@ id_t const * memoire_iterateur_next(memoire_iterateur_t * i, eep_item_t * dst){
   if(*i==MEM_PARCOURS_FINI)
     return NULL;
 
-  id_t const * ans=sram_ids+*i;
+  id_t const * ans=((id_t const *) sram_ids)+*i;
   
   eep_item_t * src=eep_items+*i;
   eeprom_read_block(dst, src, sizeof(eep_item_t));
@@ -197,7 +199,7 @@ id_t const * memoire_iterateur_next(memoire_iterateur_t * i, eep_item_t * dst){
 
 uint8_t memoire_count(void){
   uint8_t ans=0;
-  for(int i=0; i<EEP_MAXSIZE; i++)
+  for(uint8_t i=0; i<EEP_MAXSIZE; i++)
     if((sram_bitmap[i>>3]>>(i&7))&1)
       ans++;
   return ans;

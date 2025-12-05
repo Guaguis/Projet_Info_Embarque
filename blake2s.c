@@ -1,4 +1,8 @@
-// C'est l'implementation de blake2s. On n'y touche pas.
+/*
+  Implementation de Blake2s
+  Credit: Alexey NAZAROV
+*/
+
 
 //blake2s.c
 #include <stdint.h>
@@ -80,7 +84,7 @@ static void blake2s_set_IV(uint32_t *buf) {
     memcpy(buf, blake2s_IV, sizeof(blake2s_IV));
 }
 
-void blake2s_init(blake2s_ctx_t *S) {
+static void blake2s_init(blake2s_ctx_t *S) {
     memset(S, 0, sizeof(blake2s_ctx_t));
     blake2s_set_IV(S->h);
     S->h[0] ^= (1UL << 24) | (1UL << 16) | BLAKE2S_OUTLEN;
@@ -121,7 +125,7 @@ static void blake2s_compress(blake2s_ctx_t *S, const uint8_t in[BLAKE2S_BLOCKBYT
         S->h[i] ^= v[i] ^ v[i + 8];
 }
 
-void blake2s_update(blake2s_ctx_t *S, const uint8_t *data, uint16_t len) {
+static void blake2s_update(blake2s_ctx_t *S, const uint8_t *data, uint16_t len) {
     size_t left = S->buflen;
     size_t fill = BLAKE2S_BLOCKBYTES - left;
     if (len > fill) {
@@ -142,7 +146,7 @@ void blake2s_update(blake2s_ctx_t *S, const uint8_t *data, uint16_t len) {
     S->buflen += len;
 }
 
-void blake2s_final(blake2s_ctx_t *S, uint8_t *digest) {
+static void blake2s_final(blake2s_ctx_t *S, uint8_t *digest) {
     blake2s_increment_counter(S, S->buflen);
     blake2s_set_lastblock(S); // Directly set last block without checking
     memset(S->buf + S->buflen, 0, BLAKE2S_BLOCKBYTES - S->buflen);

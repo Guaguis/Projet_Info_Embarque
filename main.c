@@ -7,8 +7,14 @@
 #include "alea.h"
 #include "signature.h"
 #include "consent.h"
+#include <uart.h>
 
-#define STATUS_ERR_COMMAND_UNKNOWN 1
+#define COMMAND_LIST_CREDENTIALS (0)
+#define COMMAND_MAKE_CREDENTIAL (1)
+#define COMMAND_GET_ASSERTION (2)
+#define COMMAND_RESET (3)
+
+#define STATUS_ERR_COMMAND_UNKNOWN (1)
 
 int main(void ){
     UART__init();
@@ -23,7 +29,7 @@ for (;;) {
         case COMMAND_GET_ASSERTION:   getassertion();   break;
         case COMMAND_LIST_CREDENTIALS: listcredentials(); break;
         case COMMAND_RESET: reset(); break;
-        default: serial_write_byte(STATUS_ERR_COMMAND_UNKNOWN); break;
+        default: UART__putc(STATUS_ERR_COMMAND_UNKNOWN); break;
     }
 }
 return 0 ;
