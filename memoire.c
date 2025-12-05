@@ -190,3 +190,11 @@ void memoire_iterateur_next(memoire_iterateur_t * i, eep_item_t * dst){
   // incrementation de l'iterateur
   for(; *i<EEP_MAXSIZE && !(sram_bitmap[*i>>3]>>(*i&7))&1; (*i)++){}
 }
+
+uint8_t memoire_count(void){
+  uint8_t ans=0;
+  for(int i=0; i<EEP_MAXSIZE; i++)
+    if((sram_bitmap[i>>3]>>(i&7))&1)
+      ans++;
+  return ans;
+}

@@ -58,4 +58,6 @@ void memoire_init_iterateur(memoire_iterateur_t *);
 */
 void memoire_iterateur_next(memoire_iterateur_t *, eep_item_t *);
 
+uint8_t memoire_count(void);
+
 #endif //MEMOIRE_H
