@@ -2,9 +2,6 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
-#define FOSC (16000000UL) // Clock Speed
-#define BAUD (9600UL)
-#define MYUBRR ((FOSC/(16*BAUD))-1)
 
 static uint8_t buf[BUFSIZE];
 
@@ -12,12 +9,13 @@ struct ring_buffer uart__rb;
 
 void UART__init(void){
   cli(); // recommande dans la doc de desactiver les interruptions quand on init
+  UCSR0A=_BV(U2X0);
   UCSR0B=_BV(RXEN0)|_BV(TXEN0)|_BV(RXCIE0); // enable interrupts, TX and RX
   UCSR0C=_BV(UCSZ00)|_BV(UCSZ01); // 8-bits data
 
   /*Set baud rate */
-  UBRR0H = (unsigned char)(MYUBRR>>8);
-  UBRR0L = (unsigned char)MYUBRR;
+  UBRR0H = 0;
+  UBRR0L = 16;
 
   ring_buffer__init(&uart__rb, buf, BUFSIZE);
   sei();

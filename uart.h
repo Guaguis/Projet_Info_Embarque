@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "ring_buffer.h"
 
-#define BUFSIZE 8
+#define BUFSIZE 41
 
 void UART__init(void);
 
