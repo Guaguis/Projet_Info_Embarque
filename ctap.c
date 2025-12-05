@@ -5,17 +5,18 @@
 #include "consent.h"
 #include "uart.h"
 #include "ctap.h"
+#include <alea.h>
 
 
 
 // Constantes de statut 
-#define STATUS_OK                 0
-#define STATUS_ERR_COMMAND_UNKNOWN 1
-#define STATUS_ERR_CRYPTO_FAILED  2
-#define STATUS_ERR_BAD_PARAMETER  3
-#define STATUS_ERR_NOT_FOUND      4
-#define STATUS_ERR_STORAGE_FULL   5
-#define STATUS_ERR_APPROVAL       6
+#define STATUS_OK                 (0)
+#define STATUS_ERR_COMMAND_UNKNOWN (1)
+#define STATUS_ERR_CRYPTO_FAILED  (2)
+#define STATUS_ERR_BAD_PARAMETER  (3)
+#define STATUS_ERR_NOT_FOUND      (4)
+#define STATUS_ERR_STORAGE_FULL   (5)
+#define STATUS_ERR_APPROVAL       (6)
 
 // on lit  exactement len octets depuis l'UART 
 static void serial_read(uint8_t *buf, uint8_t len) {
@@ -107,7 +108,7 @@ void getassertion(void) {
     }
 
     // Lire les 20 octets du clientDataHash
-    if (!serial_read(client_data_hash, 20)) {
+    if (!serial_read_exact(client_data_hash, 20)) {
         serial_write_byte(STATUS_ERR_BAD_PARAMETER);
         return;
     }
@@ -161,7 +162,7 @@ void listcredentials(void) {
         id_t const * id=memoire_iterateur_next(&it, &item);
         // On n'envoie que les 16 octets de cred_id
         serial_write(item.cred_id, 16);
-	serial_write(id, 20);
+	serial_write(*id, 20);
     }
 }
 
