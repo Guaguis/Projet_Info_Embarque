@@ -107,6 +107,7 @@ void getassertion(void) {
     eep_item_t item;              // contient cred_id[16] + sk[21] depuis EEPROM
     uint8_t priv_key20[20];       // clé privée micro-ecc (20 octets)
     uint8_t signature[40];        // r||s
+    alea_collect_client(TCNT1);
     const struct uECC_Curve_t *curve = uECC_secp160r1();
 
     //  Lire hashed_app_id et clientDataHash depuis l’UART
@@ -132,14 +133,14 @@ void getassertion(void) {
     if (!wait_for_consent()) {
         serial_write_byte(STATUS_ERR_APPROVAL);
         // On efface la clé de la SRAM 
-        memset(item.sk, 0, sizeof(item.sk));
+        memset(item.sk, 0, 21);
         return;
     }
     
 if (!signature_sign(item.sk, client_data_hash, signature)) {
     serial_write_byte(STATUS_ERR_CRYPTO_FAILED);
-    memset(item.sk, 0, sizeof(item.sk));
-    memset(client_data_hash, 0, sizeof(client_data_hash));
+    memset(item.sk, 0, 21);
+    memset(client_data_hash, 0, 20);
     return;
 }
 
@@ -149,8 +150,8 @@ if (!signature_sign(item.sk, client_data_hash, signature)) {
     serial_write(signature, 40);
 
     //  Nettoyage des secrets en RAM
-    memset(item.sk, 0, sizeof(item.sk));
-    memset(client_data_hash, 0, sizeof(client_data_hash));
+    memset(item.sk, 0, 21);
+    memset(client_data_hash, 0, 20);
 }
 
 
@@ -158,31 +159,28 @@ if (!signature_sign(item.sk, client_data_hash, signature)) {
 void listcredentials(void) {
     memoire_iterateur_t it;
     eep_item_t item;
-    uint8_t count = 0;
-
-    // on compte les credentials
-    memoire_init_iterateur(&it);
-    while (it != MEM_PARCOURS_FINI) {
-        memoire_iterateur_next(&it, &item);
-        count++;
-    }
+    alea_collect_client(TCNT1);
+    uint8_t count = memoire_count();
 
     // on envoit la réponse
     serial_write_byte(STATUS_OK);  // statut
     serial_write_byte(count);      // nombre de credentials
 
-    //  ensuite on fait un deuxième tour et on  envoit  tous les credential_id
+    // on  envoit  tous les credential_id
     memoire_init_iterateur(&it);
     while (it != MEM_PARCOURS_FINI) {
-        memoire_iterateur_next(&it, &item);
+        id_t const * id=memoire_iterateur_next(&it, &item);
         // On n'envoie que les 16 octets de cred_id
         serial_write(item.cred_id, 16);
+	serial_write(id, 20);
     }
 }
 
 void reset(void) {
+  alea_collect_client(TCNT1);
+  
     // Demande de consentement utilisateur
-    if (!wiat_for_consent()) {
+    if (!wait_for_consent()) {
         serial_write_byte(STATUS_ERR_APPROVAL);
         return;
     }
