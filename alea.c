@@ -5,9 +5,9 @@
 #include <avr/io.h>
 
 /*
-  0-3 : inputs utilisateur
-  4-6 : inputs client
-  7 : chaleur
+  0-31 : inputs utilisateur
+  32-62 : inputs client
+  63 : chaleur
   reste : rien
 */
 static uint16_t toHash[64];
@@ -24,7 +24,7 @@ static uint8_t alea[32];
 static uint8_t alea_curseur=32;
 
 void alea_collect_user(uint16_t x){
-  if(hash_user>=4)
+  if(hash_user>=32)
     return;
 
   toHash[hash_user]=x;
@@ -32,10 +32,10 @@ void alea_collect_user(uint16_t x){
 }
 
 void alea_collect_client(uint16_t x){
-  if(hash_client>=3)
+  if(hash_client>=31)
     return;
 
-  toHash[4|hash_client]=x;
+  toHash[32|hash_client]=x;
   hash_client++;
 }
 
@@ -56,7 +56,7 @@ static void collect_temperature(void){
   ADCSRA |= (1 << ADSC);
   while (ADCSRA & (1 << ADSC));
 
-  toHash[7]=ADC;
+  toHash[63]=ADC;
 
   // race condition possible ?
   PRR=oldPRR; DDRC=oldDDRC; PORTC=oldPORTC; ADMUX=oldADMUX; ADCSRA=oldADCSRA;
