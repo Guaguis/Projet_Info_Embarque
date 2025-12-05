@@ -92,10 +92,10 @@ void memoire_reset(void){
 
   // un memset improvise version eeprom
   uint8_t * i=(uint8_t *)eep_ids;
-  for(; i<(uint8_t *)1024; i+=IDS_SIZE){
-    eeprom_update_block(sram_bitmap, i, IDS_SIZE);
+  for(; i+IDS_SIZE<(uint8_t *)1024; i+=IDS_SIZE){
+    eeprom_update_block(sram_ids, i, IDS_SIZE);
   }
-  eeprom_update_block(sram_bitmap, i, ((uint8_t *)1024)-i);
+  eeprom_update_block(sram_ids, i, ((uint8_t *)1024)-i);
 }
 
 static void incremente_compteurs(void){
@@ -107,7 +107,7 @@ static void incremente_compteurs(void){
   
   eeprom_update_block(sram_compteur, eep_compteur, 16);
 }
-
+#include <consent.h>
 int memoire_push(uint8_t sk[21], id_t id, uint8_t cred_id[16]){
   // position ou on va ecrire dans l'eep_items
   int pos=-1;
@@ -128,7 +128,7 @@ int memoire_push(uint8_t sk[21], id_t id, uint8_t cred_id[16]){
 	sram_bitmap[i>>3]|=1U<<(i&7); // mise a jour bitmap
 	
 	// on ecrit l'id et la bitmap, et on ecrira l'item apres
-	memcpy(sram_ids, id, sizeof(id_t));
+	memcpy(sram_ids+i, id, sizeof(id_t));
 	eeprom_update_block(sram_bitmap, eep_bitmap, 4);
 	id_t * dst=eep_ids+i;
 	eeprom_update_block(id, dst, sizeof(id_t));

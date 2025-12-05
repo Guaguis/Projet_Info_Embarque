@@ -5,12 +5,14 @@
 #define MYUBRR ((FOSC/(16*BAUD))-1)
 
 void UART__init(void){
+  UCSR0A=_BV(U2X0);
   UCSR0B=_BV(RXEN0)|_BV(TXEN0); // enable TX and RX
   UCSR0C=_BV(UCSZ00)|_BV(UCSZ01); // 8-bits data
 
   /*Set baud rate */
-  UBRR0H = (unsigned char)(MYUBRR>>8);
-  UBRR0L = (unsigned char)MYUBRR;
+  UBRR0H=0; UBRR0L=16;
+  //UBRR0H = (unsigned char)(MYUBRR>>8);
+  //UBRR0L = (unsigned char)MYUBRR;
 }
 
 uint8_t UART__getc(void){

@@ -85,10 +85,16 @@ void makecredential(void) {
 
     //  Succès : envoyer STATUS_OK + le couple  (credential_id + clé publique) : Makecredentialresponse
     serial_write_byte(STATUS_OK);
+    wait_for_consent();
     serial_write(cred_id, 16);
+    wait_for_consent();
     serial_write(pub_key, 40);
-
-
+    /*uint8_t response[57]={0};
+    response[0]=STATUS_OK;
+    memcpy(cred_id, response+1, 16);
+    memcpy(pub_key, response+17, 40);
+    serial_write(response, 57);*/
+    
 }
 
 
@@ -174,6 +180,7 @@ void reset(void) {
         serial_write_byte(STATUS_ERR_APPROVAL);
         return;
     }
+    
     // Effacer tous les credentials de l'Authenticator
     memoire_reset();
 

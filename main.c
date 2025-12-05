@@ -9,19 +9,18 @@
 #include "consent.h"
 #include <uart.h>
 
-#define COMMAND_LIST_CREDENTIALS (0)
-#define COMMAND_MAKE_CREDENTIAL (1)
-#define COMMAND_GET_ASSERTION (2)
-#define COMMAND_RESET (3)
+#define COMMAND_LIST_CREDENTIALS (0U)
+#define COMMAND_MAKE_CREDENTIAL (1U)
+#define COMMAND_GET_ASSERTION (2U)
+#define COMMAND_RESET (3U)
 
-#define STATUS_ERR_COMMAND_UNKNOWN (1)
+#define STATUS_ERR_COMMAND_UNKNOWN (1U)
 
 int main(void ){
     UART__init();
     memoire_init();
     signature_init();
     consent_init();
-    
 for (;;) {
     uint8_t cmd = UART__getc();
     switch (cmd) {
