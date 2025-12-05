@@ -17,18 +17,10 @@
 #define STATUS_ERR_STORAGE_FULL   5
 #define STATUS_ERR_APPROVAL       6
 
-// ================= UART =================
-uint8_t usart_read_byte() {
-    while (!(UCSR0A & _BV(RXC0))) {
-        ;   // attendre qu'un octet arrive
-    }
-    return UDR0;   // lire l'octet reçu
-}
-
 // on lit  exactement len octets depuis l'UART 
 static void serial_read(uint8_t *buf, uint8_t len) {
     for (uint8_t i = 0; i < len; i++) {
-        buf[i] = usart_read_byte();   // 
+      buf[i] = UART__getc();   // 
     }
 }
 
