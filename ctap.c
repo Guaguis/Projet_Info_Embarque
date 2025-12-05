@@ -58,7 +58,7 @@ void makecredential(void) {
     uint8_t pub_key[40];         // clé publique (X||Y)
     uint8_t cred_id[16];         // credential_id généré
     int ret;
-    alea_collect_client(TCNT1);
+    
 
     // Vérifier que nous avons reçu les 20 octets du hash
         if (!serial_read_exact(hashed_app_id, 20)) {
@@ -105,9 +105,7 @@ void getassertion(void) {
     id_t hashed_app_id;           // 20 octets
     uint8_t client_data_hash[20]; // 20 octets (SHA1(...))
     eep_item_t item;              // contient cred_id[16] + sk[21] depuis EEPROM
-    uint8_t priv_key20[20];       // clé privée micro-ecc (20 octets)
     uint8_t signature[40];        // r||s
-    const struct uECC_Curve_t *curve = uECC_secp160r1();
 
     //  Lire hashed_app_id et clientDataHash depuis l’UART
      if (!serial_read_exact(hashed_app_id, 20)) {
@@ -152,7 +150,6 @@ if (!signature_sign(item.sk, client_data_hash, signature)) {
     memset(item.sk, 0, sizeof(item.sk));
     memset(client_data_hash, 0, sizeof(client_data_hash));
 }
-
 
 
 void listcredentials(void) {
