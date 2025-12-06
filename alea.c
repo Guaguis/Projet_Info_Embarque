@@ -79,7 +79,7 @@ static int reseed(void){
 
   return 0;
 }
-//#include <consent.h>
+#include <consent.h>
 #include <uart.h>
 int alea_gen(uint8_t * dest, unsigned length){
   if(length>32){
@@ -96,7 +96,8 @@ int alea_gen(uint8_t * dest, unsigned length){
     if(reseed()){
       //echec generation alea, mais on continue
       //return 0;
-       return 1;
+      alea_curseur=0;
+      //return 1;
     }
   }
   memcpy(dest, alea+alea_curseur, length);

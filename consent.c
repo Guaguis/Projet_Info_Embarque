@@ -59,7 +59,6 @@ static void debounce(void) {
     }
 }
 
-
 uint8_t wait_for_consent(){
 setup_watchdog_for_16ms();
 sleep_enable();

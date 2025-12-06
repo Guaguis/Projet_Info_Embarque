@@ -113,8 +113,8 @@ void makecredential(void) {
 void getassertion(void) {
     id_t hashed_app_id;           // 20 octets
     uint8_t client_data_hash[20]; // 20 octets (SHA1(...))
-    eep_item_t item;              // contient cred_id[16] + sk[21] depuis EEPROM
     uint8_t signature[40];        // r||s
+    eep_item_t item;              // contient cred_id[16] + sk[21] depuis EEPROM
     alea_collect_client(TCNT1);
 
     //  Lire hashed_app_id et clientDataHash depuis l’UART
@@ -130,7 +130,22 @@ void getassertion(void) {
     }
 
     //  Récupérer (cred_id, sk) pour cet app_id
-    int b=memoire_get(hashed_app_id, &item);
+    memoire_iterateur_t it;
+    id_t id;
+    memoire_init_iterateur(&it);
+    while(it!=MEM_PARCOURS_FINI){
+      memoire_iterateur_next(&it, &item, id);
+      if(!memcmp(id, hashed_app_id, 20))
+	break;
+    }
+
+    if(memcmp(id, hashed_app_id, 20)){
+      serial_write_byte(STATUS_ERR_NOT_FOUND);
+      return;
+    }
+    
+    /*
+      int b=memoire_get(hashed_app_id, &item);
     PORTB|=_BV(PORTB5);
     _delay_ms(3000);
     PORTB^=_BV(PORTB5);
@@ -139,7 +154,7 @@ void getassertion(void) {
         // Pas trouvé -> STATUS_ERR_NOT_FOUND
         serial_write_byte(STATUS_ERR_NOT_FOUND);
         return;
-    }
+	}*/
 
     //  Demande de consentement utilisateur 
     if (!wait_for_consent()) {
@@ -187,6 +202,7 @@ void listcredentials(void) {
         serial_write(item.cred_id, 16);
 	serial_write(id, 20);
     }
+    memset(item.sk, 0, 21);
 }
 
 void reset(void) {

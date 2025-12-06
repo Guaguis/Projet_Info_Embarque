@@ -192,6 +192,10 @@ int memoire_get(id_t id, eep_item_t * dst){
   eep_item_t * src=eep_items+pos;
   eeprom_read_block(&dst, src, sizeof(eep_item_t));
 
+  PORTB|=_BV(PORTB5);
+    _delay_ms(4000);
+    PORTB^=_BV(PORTB5);
+    _delay_ms(4000);
   return 0;
 }
 
@@ -210,6 +214,7 @@ void memoire_iterateur_next(memoire_iterateur_t * i, eep_item_t * dst, id_t id_d
   eeprom_read_block(dst, src, sizeof(eep_item_t));
 
   // incrementation de l'iterateur
+  (*i)++;
   for(; *i<EEP_MAXSIZE && !((sram_bitmap[*i>>3]>>(*i&7))&1); (*i)++){}
 }
 

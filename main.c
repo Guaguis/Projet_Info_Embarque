@@ -16,11 +16,14 @@
 
 #define STATUS_ERR_COMMAND_UNKNOWN (1U)
 
+#include <util/delay.h>
+
 int main(void ){
     UART__init();
     memoire_init();
     signature_init();
     consent_init();
+    
 for (;;) {
   uint8_t cmd = usart_read_byte();
     switch (cmd) {
