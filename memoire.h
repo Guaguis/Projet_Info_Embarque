@@ -53,13 +53,10 @@ typedef uint8_t memoire_iterateur_t;
 void memoire_init_iterateur(memoire_iterateur_t *);
 
 /*
-  ecrit le prochain item dans le pointeur.
+  ecrit le prochain item et id dans les pointeurs.
   ne fait rien si parcours fini
-
-  renvoie l'app_id qui correspond,
-  null si fini
 */
-id_t const * memoire_iterateur_next(memoire_iterateur_t *, eep_item_t *);
+void memoire_iterateur_next(memoire_iterateur_t *, eep_item_t *, id_t);
 
 uint8_t memoire_count(void);
 

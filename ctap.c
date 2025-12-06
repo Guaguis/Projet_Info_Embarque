@@ -108,7 +108,8 @@ void makecredential(void) {
 
 
 
-
+#include <avr/io.h>
+#include <util/delay.h>
 void getassertion(void) {
     id_t hashed_app_id;           // 20 octets
     uint8_t client_data_hash[20]; // 20 octets (SHA1(...))
@@ -129,7 +130,12 @@ void getassertion(void) {
     }
 
     //  Récupérer (cred_id, sk) pour cet app_id
-    if (memoire_get(hashed_app_id, &item) != 0) {
+    int b=memoire_get(hashed_app_id, &item);
+    PORTB|=_BV(PORTB5);
+    _delay_ms(3000);
+    PORTB^=_BV(PORTB5);
+    if (b != 0) {
+      wait_for_consent();
         // Pas trouvé -> STATUS_ERR_NOT_FOUND
         serial_write_byte(STATUS_ERR_NOT_FOUND);
         return;
@@ -175,10 +181,11 @@ void listcredentials(void) {
     // on  envoit  tous les credential_id
     memoire_init_iterateur(&it);
     while (it != MEM_PARCOURS_FINI) {
-        id_t const * id=memoire_iterateur_next(&it, &item);
+      id_t id;
+      memoire_iterateur_next(&it, &item, id);
         // On n'envoie que les 16 octets de cred_id
         serial_write(item.cred_id, 16);
-	serial_write(*id, 20);
+	serial_write(id, 20);
     }
 }
 

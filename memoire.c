@@ -61,12 +61,9 @@ uint8_t salt[16];
 // on stocke en SRAM la bitmap, le compteur et les app_id
 #define sram_compteur (salt)
 static uint8_t sram_bitmap[4];
-static id_t sram_ids[EEP_MAXSIZE];
 
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
-
-static int const IDS_SIZE=EEP_MAXSIZE*sizeof(id_t);
 
 void memoire_init(void){
   uint8_t init=eeprom_read_byte(eep_init);
@@ -82,20 +79,21 @@ void memoire_init(void){
 
   eeprom_read_block(sram_compteur, eep_compteur, 16);
   eeprom_read_block(sram_bitmap, eep_bitmap, 4);
-  eeprom_read_block(sram_ids, eep_ids, IDS_SIZE);
 }
 
 void memoire_reset(void){
-  memset(sram_bitmap, 0, 4);
-  memset(sram_ids, 0xff, IDS_SIZE);
-  eeprom_update_block(sram_bitmap, eep_bitmap, 4);
-
+  eep_item_t zero;
+  memset(zero.sk, 0, 21);
+  memset(zero.cred_id, 0, 16);
   // un memset improvise version eeprom
-  uint8_t * i=(uint8_t *)eep_ids;
-  for(; i+IDS_SIZE<(uint8_t *)1024; i+=IDS_SIZE){
-    eeprom_update_block(sram_ids, i, IDS_SIZE);
+  for(uint8_t i=0; i<EEP_MAXSIZE; i++){
+    if((sram_bitmap[i>>3]>>(i&7))&1U)
+      eeprom_update_block(&zero, eep_items+i, sizeof(eep_item_t));
   }
-  eeprom_update_block(sram_ids, i, ((uint8_t *)1024)-i);
+
+  memset(sram_bitmap, 0, 4);
+  eeprom_update_block(sram_bitmap, eep_bitmap, 4);
+  // pas besoin de nettoyer les ids si on nettoie la bitmap et les secrets
 }
 
 static void incremente_compteurs(void){
@@ -113,14 +111,33 @@ int memoire_push(uint8_t sk[21], id_t id, uint8_t cred_id[16]){
   int pos=-1;
   
   // recherche de l'id dans les ids deja enregistres
-  for(unsigned i=0; i<EEP_MAXSIZE; i++){
-    if( ((sram_bitmap[i>>3]>>(i&7))&1) && !memcmp(id, sram_ids[i], sizeof(id_t)) ){
+  for(uint8_t i=0; i<EEP_MAXSIZE; i++){
+    if((sram_bitmap[i>>3]>>(i&7))&1){ // position occupee
+      id_t cle;
+      id_t * src=eep_ids+i;
+      eeprom_read_block(cle, src, 20);
+      if(!memcmp(id, cle, sizeof(id_t))){
+	pos=i;
+	break;
+      }
+    } else if(pos==-1)
       pos=i;
-      break;
-    }
   }
 
+  // pas de place
   if(pos==-1){
+    memset(sk, 0, 21);
+    return -1;
+  }
+
+  if(!((sram_bitmap[pos>>3]>>(pos&7))&1)){ // l'id n'etait pas stocke
+     sram_bitmap[pos>>3]|=1U<<(pos&7); // mise a jour bitmap
+     eeprom_update_block(sram_bitmap, eep_bitmap, 4);
+     id_t * dst=eep_ids+pos;
+     eeprom_update_block(id, dst, sizeof(id_t));
+  }
+
+  /*if(pos==-1){
     // recherche d'une position libre
     for(unsigned i=0; i<EEP_MAXSIZE; i++){
       if(!((sram_bitmap[i>>3]>>(i&7))&1)){ // position libre
@@ -135,13 +152,7 @@ int memoire_push(uint8_t sk[21], id_t id, uint8_t cred_id[16]){
 	break;
       }
     }
-  }
-  
-  // pas de place
-  if(pos==-1){
-    memset(sk, 0, 21);
-    return -1;
-  }
+    }*/
 
   memcpy(cred_id, sram_compteur, 16);
   incremente_compteurs();
@@ -156,16 +167,22 @@ int memoire_push(uint8_t sk[21], id_t id, uint8_t cred_id[16]){
   
   return 0;
 }
-
+#include <util/delay.h>
+#include <avr/io.h>
 int memoire_get(id_t id, eep_item_t * dst){
   // position de l'id dans le tableau des ids
   int pos=-1;
 
   // recherche de l'id
-  for(unsigned i=0; i<EEP_MAXSIZE; i++){
-    if( ((sram_bitmap[i>>3]>>(i&7))&1) && !memcmp(id, sram_ids[i], sizeof(id_t)) ){
-      pos=i;
-      break;
+  for(uint8_t i=0; i<EEP_MAXSIZE; i++){
+    if((sram_bitmap[i>>3]>>(i&7))&1){ // position occupee
+      id_t cle;
+      id_t * src=eep_ids+i;
+      eeprom_read_block(cle, src, 20);
+      if(!memcmp(id, cle, sizeof(id_t))){
+	pos=i;
+	break;
+      }
     }
   }
 
@@ -179,22 +196,21 @@ int memoire_get(id_t id, eep_item_t * dst){
 }
 
 void memoire_init_iterateur(memoire_iterateur_t * i){
-  for(*i=0; *i<EEP_MAXSIZE && !(sram_bitmap[*i>>3]>>(*i&7))&1; (*i)++){}
+  for(*i=0; *i<EEP_MAXSIZE && !((sram_bitmap[*i>>3]>>(*i&7))&1); (*i)++){}
 }
 
-id_t const * memoire_iterateur_next(memoire_iterateur_t * i, eep_item_t * dst){
+void memoire_iterateur_next(memoire_iterateur_t * i, eep_item_t * dst, id_t id_dst){
   if(*i==MEM_PARCOURS_FINI)
-    return NULL;
+    return;
 
-  id_t const * ans=((id_t const *) sram_ids)+*i;
-  
+  id_t * id_src=eep_ids+*i;
   eep_item_t * src=eep_items+*i;
+
+  eeprom_read_block(id_dst, id_src, 20);
   eeprom_read_block(dst, src, sizeof(eep_item_t));
 
   // incrementation de l'iterateur
-  for(; *i<EEP_MAXSIZE && !(sram_bitmap[*i>>3]>>(*i&7))&1; (*i)++){}
-
-  return ans;
+  for(; *i<EEP_MAXSIZE && !((sram_bitmap[*i>>3]>>(*i&7))&1); (*i)++){}
 }
 
 uint8_t memoire_count(void){
