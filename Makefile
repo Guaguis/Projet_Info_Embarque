@@ -17,6 +17,9 @@ memoire.o: memoire.c memoire.h salt.h
 alea.o: alea.c alea.h blake2s.h salt.h
 	avr-gcc $(CFLAGS) -o $@ -c $<
 
+salt.o: salt.c salt.h
+	avr-gcc $(CFLAGS) -o $@ -c $<
+
 blake2s.o: blake2s.c blake2s.h
 	avr-gcc $(CFLAGS) -o $@ -c $<
 
@@ -26,7 +29,7 @@ consent.o: consent.c consent.h
 projet.hex: projet.elf
 	avr-objcopy -O ihex $^ $@
 
-projet.elf: main.c consent.o memoire.o alea.o blake2s.o uECC.o signature.o ctap.o uart.o libring_buffer.a
+projet.elf: main.c consent.o memoire.o alea.o blake2s.o uECC.o signature.o ctap.o uart.o libring_buffer.a salt.o
 	avr-gcc $(CFLAGS) -o $@ $^
 
 uECC.o:
