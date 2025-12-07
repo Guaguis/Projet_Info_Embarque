@@ -3,8 +3,6 @@
 #include <string.h>
 #include <salt.h>
 
-uint8_t salt[16];
-
 /*
   on manipulera directement les adresses numeriques
   on ne fait pas confiance a gcc
@@ -39,8 +37,6 @@ uint8_t salt[16];
   on stocke dans l'eeprom des triplets de la forme
   (app_id, cred_id, sk)
   on mets tous les app_id dans un seul tableau eep_ids
-  (pour reduire le temps d'initialisation :
-  un seul appel appel a eeprom_read_block)
   puis on mets les couples (cred_id, sk)
   dans un autre tableau eep_items
   une bitmap eep_bitmap nous indique
@@ -58,12 +54,22 @@ uint8_t salt[16];
 #define eep_ids ((id_t *)22)
 #define eep_items ((eep_item_t *)(22+EEP_MAXSIZE*sizeof(id_t)))
 
-// on stocke en SRAM la bitmap, le compteur et les app_id
+// on stocke en SRAM la bitmap, et le compteur
 #define sram_compteur (salt)
 static uint8_t sram_bitmap[4];
 
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////
+
+void incremente_compteurs(void){
+  int i=-1;
+  do{
+    i++;
+    salt[i]++;
+  }while(i<16 && !salt[i]);
+  
+  eeprom_update_block(sram_compteur, eep_compteur, 16);
+}
 
 void memoire_init(void){
   uint8_t init=eeprom_read_byte(eep_init);
@@ -96,16 +102,6 @@ void memoire_reset(void){
   // pas besoin de nettoyer les ids si on nettoie la bitmap et les secrets
 }
 
-static void incremente_compteurs(void){
-  int i=-1;
-  do{
-    i++;
-    sram_compteur[i]++;
-  }while(i<16 && !sram_compteur[i]);
-  
-  eeprom_update_block(sram_compteur, eep_compteur, 16);
-}
-#include <consent.h>
 int memoire_push(uint8_t sk[21], id_t id, uint8_t cred_id[16]){
   // position ou on va ecrire dans l'eep_items
   int pos=-1;
@@ -137,23 +133,6 @@ int memoire_push(uint8_t sk[21], id_t id, uint8_t cred_id[16]){
      eeprom_update_block(id, dst, sizeof(id_t));
   }
 
-  /*if(pos==-1){
-    // recherche d'une position libre
-    for(unsigned i=0; i<EEP_MAXSIZE; i++){
-      if(!((sram_bitmap[i>>3]>>(i&7))&1)){ // position libre
-	pos=i;
-	sram_bitmap[i>>3]|=1U<<(i&7); // mise a jour bitmap
-	
-	// on ecrit l'id et la bitmap, et on ecrira l'item apres
-	memcpy(sram_ids+i, id, sizeof(id_t));
-	eeprom_update_block(sram_bitmap, eep_bitmap, 4);
-	id_t * dst=eep_ids+i;
-	eeprom_update_block(id, dst, sizeof(id_t));
-	break;
-      }
-    }
-    }*/
-
   memcpy(cred_id, sram_compteur, 16);
   incremente_compteurs();
   
@@ -167,6 +146,8 @@ int memoire_push(uint8_t sk[21], id_t id, uint8_t cred_id[16]){
   
   return 0;
 }
+
+#ifdef DEBUG
 #include <util/delay.h>
 #include <avr/io.h>
 int memoire_get(id_t id, eep_item_t * dst){
@@ -190,7 +171,7 @@ int memoire_get(id_t id, eep_item_t * dst){
     return -1;
 
   eep_item_t * src=eep_items+pos;
-  eeprom_read_block(&dst, src, sizeof(eep_item_t));
+  eeprom_read_block(dst, src, sizeof(eep_item_t));
 
   PORTB|=_BV(PORTB5);
     _delay_ms(4000);
@@ -198,6 +179,7 @@ int memoire_get(id_t id, eep_item_t * dst){
     _delay_ms(4000);
   return 0;
 }
+#endif //DEBUG
 
 void memoire_init_iterateur(memoire_iterateur_t * i){
   for(*i=0; *i<EEP_MAXSIZE && !((sram_bitmap[*i>>3]>>(*i&7))&1); (*i)++){}

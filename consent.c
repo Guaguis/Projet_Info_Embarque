@@ -71,6 +71,7 @@ uint16_t tick=0;
     if (button_pushed_flag==1){
         sleep_disable();
 	alea_collect_user(TCNT1);
+	PORTB&=~_BV(PORTB5);
         return 1;
     
     }

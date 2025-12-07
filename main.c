@@ -1,3 +1,4 @@
+//#define DEBUG
 #include <avr/io.h>
 #include <util/delay.h>
 #include <stdint.h>
@@ -15,8 +16,6 @@
 #define COMMAND_RESET (3U)
 
 #define STATUS_ERR_COMMAND_UNKNOWN (1U)
-
-#include <util/delay.h>
 
 int main(void ){
     UART__init();

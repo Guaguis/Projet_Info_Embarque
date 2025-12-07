@@ -28,6 +28,7 @@ void memoire_reset(void);
 */
 int memoire_push(uint8_t sk[21], id_t, uint8_t cred_id[16]);
 
+#ifdef DEBUG
 /*
   cherche l'entree qui correspond a l'id
   l'ecrit dans le pointeur
@@ -37,6 +38,7 @@ int memoire_push(uint8_t sk[21], id_t, uint8_t cred_id[16]);
   renvoie 0 si ok, sinon c'est que l'id n'a pas ete trouve.
 */
 int memoire_get(id_t, eep_item_t *);
+#endif // DEBUG
 
 //////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////

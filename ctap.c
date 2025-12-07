@@ -106,10 +106,10 @@ void makecredential(void) {
     
 }
 
-
-
+#ifdef DEBUG
 #include <avr/io.h>
 #include <util/delay.h>
+#endif // DEBUG
 void getassertion(void) {
     id_t hashed_app_id;           // 20 octets
     uint8_t client_data_hash[20]; // 20 octets (SHA1(...))
@@ -129,6 +129,7 @@ void getassertion(void) {
         return;
     }
 
+#ifndef DEBUG
     //  Récupérer (cred_id, sk) pour cet app_id
     memoire_iterateur_t it;
     id_t id;
@@ -143,18 +144,19 @@ void getassertion(void) {
       serial_write_byte(STATUS_ERR_NOT_FOUND);
       return;
     }
-    
-    /*
-      int b=memoire_get(hashed_app_id, &item);
+#endif // DEBUG
+
+#ifdef DEBUG
+    int b=memoire_get(hashed_app_id, &item);
     PORTB|=_BV(PORTB5);
     _delay_ms(3000);
     PORTB^=_BV(PORTB5);
     if (b != 0) {
-      wait_for_consent();
         // Pas trouvé -> STATUS_ERR_NOT_FOUND
         serial_write_byte(STATUS_ERR_NOT_FOUND);
         return;
-	}*/
+    }
+#endif //DEBUG
 
     //  Demande de consentement utilisateur 
     if (!wait_for_consent()) {
