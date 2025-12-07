@@ -6,7 +6,7 @@ ce projet contient une implémentation de la fonction de hachage BLAKE2S qui est
 
 ce projet contient une implémentation d'un système de buffer circulaire écrite par Vincent RUELLO.
 
-ce projet utilise la bibliothèque micro-ecc de Keneth MacKay
+ce projet utilise la bibliothèque micro-ecc de Kenneth MacKay
    https://github.com/kmackay/micro-ecc
 
 # COMPILATION
